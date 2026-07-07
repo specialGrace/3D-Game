@@ -1,0 +1,498 @@
+// Word variables
+var deg = Math.PI / 180;
+function player(x, y, z, rx, ry) {
+  this.x = x;
+  this.y = y;
+  this.z = z;
+  this.rx = rx;
+  this.ry = ry;
+}
+
+var coins = [
+  [800, 30, -800, 0, 0, 0, 50, 50, 'pattern/coin2.png'],
+  [-600, 30, -100, 0, 0, 0, 50, 50, 'pattern/coin1.png'],
+  [200, 30, 300, 0, 0, 0, 50, 50, 'pattern/coin2.png']
+];
+
+var keys = [
+  [-900, 30, -100, 0, 0, 0, 50, 50, 'pattern/key2.png'],
+  [-100, 30, -600, 0, 0, 0, 50, 50, 'pattern/key.png'],
+  [200, 30, -600, 0, 0, 0, 50, 50, 'pattern/key2.png'],
+];
+var dogs = [
+    [-500, 30, -600, 0, 180, 0, 120, 120, 'pattern/dog.png'],
+    [600, 30, 400, 0, 90, 0, 120, 120, 'pattern/dog.png'],
+];
+
+// Cartoon collectibles — uses cartoon.jpg as the item image
+var cartoons = [
+  [600, 30, -300, 0, 0, 0, 80, 80, "pattern/cartoon.png"],
+  [-400, 30, 600, 0, 0, 0, 80, 80,  "pattern/cartoon.png"],
+];
+var map = [
+  // [x, y, z,       rx, ry, rz, width, height, color]
+  //  coordination    rotation
+  [0, 100, 0, 90, 0, 0, 2000, 2000, "#005500"], // ground
+
+  // ---- Labyrinth ----------------------------------------------------------
+  // The player starts at (0,0), the middle of the map. Walls form nested
+  // rings, each with an opening on a different side, so the single path
+  // spirals outward: center -> right -> top -> right -> back exit.
+
+  // Outer boundary (back wall has a gap that is the maze exit)
+  [0, 0, -1000, 0, 0, 0, 2000, 200, "#00fff2"], // front wall
+  [-1000, 0, 0, 0, 90, 0, 2000, 200, "#0000ff"], // left wall
+  [1000, 0, 0, 0, 90, 0, 2000, 200, "#fffb00"], // right wall
+  [-375, 0, 1000, 0, 0, 0, 1250, 200, "#ff0000"], // back wall (left of exit)
+  [875, 0, 1000, 0, 0, 0, 250, 200, "#ff0000"], // back wall (right of exit)
+
+  // Ring 3 (750) - opening on the right side
+  [0, 0, -750, 0, 0, 0, 1500, 200, "#ff7300"], // top
+  [0, 0, 750, 0, 0, 0, 1500, 200, "#ff7300"], // bottom
+  [-750, 0, 0, 0, 90, 0, 1500, 200, "#ff7300"], // left
+
+  // Ring 2 (500) - opening on the top side
+  [0, 0, 500, 0, 0, 0, 1000, 200, "#a200ff"], // bottom
+  [-500, 0, 0, 0, 90, 0, 1000, 200, "#a200ff"], // left
+  [500, 0, 0, 0, 90, 0, 1000, 200, "#a200ff"], // right
+
+  // Ring 1 (250) - opening on the right side (exit from the start room)
+  [0, 0, -250, 0, 0, 0, 500, 200, "#2bff00"], // top
+  [0, 0, 250, 0, 0, 0, 500, 200, "#2bff00"], // bottom
+  [-250, 0, 0, 0, 90, 0, 500, 200, "#2bff00"], // left
+];
+
+let movementSpeed = 1;
+let initialPosition = 0;
+let pawn = new player(0, 0, 0, 0, 0);
+let world = document.getElementById("world");
+// let container = document.getElementById("container");
+
+// variables for movement
+var pressLeft = 0;
+var pressRight = 0;
+var pressForward = 0;
+var pressBack = 0;
+var pressUp = 0;
+var pressPower = 0;
+var released = 0;
+var mouseX = 0;
+var mouseY = 0;
+var lock = false;
+var itemRotation = 0;
+var container = document.getElementById("container");
+var canlock = false;
+
+//if the key is pressed
+document.addEventListener("keydown", (event)=>{
+
+    if (event.key == "ArrowLeft"){
+       pressLeft = 1; 
+    }
+    if (event.key == "ArrowRight"){
+       pressRight = 1; 
+    }
+    if (event.key == "ArrowUp"){
+       pressForward = 1; 
+    }
+    if (event.key == "ArrowDown"){
+       pressBack = 1; 
+    }
+    if(event.keyCode == 32){
+        pressUp = -1;
+    }
+    if(event.key == "p"){
+        pressPower = 1;
+    }
+    if (event.key == "r"){
+        released = 1;
+    }
+})
+
+//if the key is released
+document.addEventListener("keyup", (event)=>{
+    if (event.key == "ArrowLeft"){
+       pressLeft = 0; 
+    }
+    if (event.key == "ArrowRight"){
+       pressRight = 0; 
+    }
+    if (event.key == "ArrowUp"){
+       pressForward = 0;         
+    }
+    if (event.key == "ArrowDown"){
+       pressBack = 0; 
+    }
+    if(event.keyCode == 32){
+        pressUp = 0;
+    }
+    if (event.key == "p"){
+        pressPower = 0;
+    }
+    if (event.key == "r"){
+        released = 0;
+    }
+})
+
+//if the mouse is pressed
+container.onclick = function () {
+  if(canlock) container.requestPointerLock();
+};
+
+
+document.addEventListener("pointerlockchange", (event) =>{
+    lock = !lock;
+})
+
+//mouse movement listener 
+document.addEventListener("mousemove", (event)=>{
+    mouseX = event.movementX;
+    mouseY = event.movementY;
+})
+
+// var pawn = new player(0,0,0,0,0);
+// var world = document.getElementById("world");
+
+function isColliding(x, z) {
+    let playerSize = 40;
+
+    for (let i = 0; i < map.length; i++) {
+        let wall = map[i];
+
+        if (wall[3] == 90) {
+            continue;
+        }
+
+        let wallX = wall[0];
+        let wallZ = wall[2];
+        let wallRY = wall[4];
+        let wallLength = wall[6];
+
+        // horizontal wall, along X axis
+        if (wallRY == 0 || wallRY == 180) {
+            if (
+                x > wallX - wallLength / 2 - playerSize &&
+                x < wallX + wallLength / 2 + playerSize &&
+                z > wallZ - playerSize &&
+                z < wallZ + playerSize
+            ) {
+                return true;
+            }
+        }
+
+        // vertical wall, along Z axis
+        if (wallRY == 90 || wallRY == -90) {
+            if (
+                x > wallX - playerSize &&
+                x < wallX + playerSize &&
+                z > wallZ - wallLength / 2 - playerSize &&
+                z < wallZ + wallLength / 2 + playerSize
+            ) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+
+function update(){
+    //count movement
+    let speedMultiplier = pressPower ? 5: 1; 
+    let dx = ((pressRight - pressLeft) * Math.cos(pawn.ry * deg) -
+                (pressForward - pressBack) * Math.sin(pawn.ry * deg))* speedMultiplier;
+    let dz = (-(pressRight - pressLeft) * Math.sin(pawn.ry * deg) -
+                (pressForward - pressBack) * Math.cos(pawn.ry * deg))* speedMultiplier;
+    let dy = pressUp * speedMultiplier;
+    let drx = mouseY;
+    let dry = - mouseX;
+    mouseX = mouseY = 0; 
+
+    // add movement to the coordinates
+    let nextX = pawn.x + dx;
+    let nextY = pawn.y + dy;
+    let nextZ = pawn.z + dz;
+
+    if (!isColliding(nextX, pawn.z)) {
+        pawn.x = nextX;
+    }
+
+    if (!isColliding(pawn.x, nextZ)) {
+        pawn.z = nextZ;
+    }
+
+pawn.y = nextY;
+
+    if (lock) {
+        pawn.rx = pawn.rx+ drx;
+        pawn.ry = pawn.ry + dry;
+
+        if (pawn.rx > 90) {
+            pawn.rx = 90;
+        }
+        if (pawn.rx < -90) {
+            pawn.rx = -90;
+        }
+    }
+    
+
+    if (released == 1)
+    {
+        pawn.x = 0;
+        pawn.y = 0;
+        pawn.z = 0;
+        pawn.rx = 0;
+        pawn.ry = 0;
+    }
+
+   //change coordinates of the world
+	world.style.transform ="translateZ(600px)" + "rotateX(" + (-pawn.rx) + "deg)" + 
+                            "rotateY(" + (-pawn.ry) + "deg)" +  
+                            "translate3d(" + (-pawn.x) + "px," + (-pawn.y) + "px," + (-pawn.z) + "px)";
+}
+function createNewWord() {
+  createSquare(map, "map");
+}
+
+
+
+// ---- Wall decoration assets ------------------------------------------------
+// ratio = width / height of the frame; insetX/insetY = inset for center picture window.
+const wallFrames = [
+  { ratio: 1, insetX: 0.16, insetY: 0.16 },
+  { ratio: 1.5, insetX: 0.08, insetY: 0.15 },
+];
+
+const wallEmojis = ["🏺", "🛡️", "⚔️", "📜", "🌿", "🌸", "🦁", "👑", "🔮", "🕯️", "🐉", "🗺️"];
+
+//function to transform array to rectangles
+
+function createSquare(squares, string) {
+  let wallIndex = 0; // counts decorated walls so patterns alternate
+  for (let i = 0; i < squares.length; i++) {
+    // create rectangles and styles
+    let newElement = document.createElement("div");
+    newElement.className = `${string} square`;
+    newElement.id = `${string} ${i}`;
+    newElement.style.width = `${squares[i][6]}px`;
+    newElement.style.height = `${squares[i][7]}px`;
+    newElement.style.transform = `translate3d(${600 - squares[i][6] / 2 + squares[i][0]}px,
+    ${400 - squares[i][7] / 2 + squares[i][1]}px, ${squares[i][2]}px) rotateX(${squares[i][3]}deg) rotateY(${squares[i][4]}deg)
+    rotateZ(${squares[i][5]}deg)`;
+
+    if (string === "map") {
+      if (i === 0) {
+        // Ground texture
+        newElement.style.backgroundImage = `url("https://thumb.photo-ac.com/73/732d0b61f93e4d8c5bdf2598e298c343_t.jpeg")`;
+        newElement.style.backgroundRepeat = "repeat";
+        newElement.style.backgroundSize = "200px 200px";
+      } else {
+        // Realistic stone wall decoration
+                // Stone wall base
+        newElement.style.backgroundColor = squares[i][8];
+        newElement.style.backgroundImage = `url("https://www.transparenttextures.com/patterns/stone-wall.png")`;
+        newElement.style.backgroundRepeat = "repeat";
+        newElement.style.backgroundSize = "200px 200px";
+        newElement.style.border = "4px solid rgba(0, 0, 0, 0.6)";
+        newElement.style.boxShadow = "inset 0 0 60px rgba(0,0,0,0.7)";
+
+        // === UNIQUE WALL DECORATION: Glowing Runes + Crystals ===
+        let decor = document.createElement("div");
+        decor.style.position = "absolute";
+        decor.style.top = "50%";
+        decor.style.left = "50%";
+        decor.style.transform = "translate(-50%, -50%)";
+        decor.style.width = "140px";
+        decor.style.height = "160px";
+        decor.style.display = "flex";
+        decor.style.alignItems = "center";
+        decor.style.justifyContent = "center";
+        decor.style.fontSize = "52px";
+        decor.style.color = "#00ffcc";
+        decor.style.textShadow = "0 0 20px #00ffff, 0 0 40px #00ffff";
+        decor.style.opacity = "0.95";
+        
+        // Different runes/symbols for variety
+        const runes = ["𖦹", "⚶", "𖧁", "⟁", "𖤐", "☉", "𖦼", "⚝", "𖧆"];
+        decor.textContent = runes[wallIndex % runes.length];
+
+        // Add glowing crystal effect
+        let crystal = document.createElement("div");
+        crystal.style.position = "absolute";
+        crystal.style.fontSize = "28px";
+        crystal.style.bottom = "-15px";
+        crystal.style.color = "#ff00ff";
+        crystal.style.textShadow = "0 0 15px #ff00ff";
+        crystal.textContent = "♦";
+        
+        decor.appendChild(crystal);
+        newElement.appendChild(decor);
+        
+        wallIndex++;
+    
+      }
+    } else {
+      // Generic collectible — index [9] is either an emoji or an image filename
+      newElement.style.backgroundColor = "transparent";
+
+      let inner = document.createElement("div");
+      inner.className = "item-inner";
+
+      let itemValue = squares[i][8];
+      // If it looks like an image file, render an <img> instead of text
+      if (/\.(jpg|jpeg|png|gif|webp|svg)$/i.test(itemValue)) {
+        let img = document.createElement("img");
+        img.src = itemValue;
+        img.style.width = "100%";
+        img.style.height = "100%";
+        img.style.objectFit = "cover";
+        img.style.borderRadius = "50%";
+        img.style.border = "3px solid gold";
+        img.style.boxShadow = "0 0 12px rgba(255, 215, 0, 0.8)";
+        inner.appendChild(img);
+      } else {
+        inner.textContent = itemValue;
+      }
+
+      newElement.appendChild(inner);
+    }
+
+    // insert rectangles into the world
+    world.append(newElement);
+  }
+}
+
+// ---- Sounds ----------------------------------------------------------------
+// Per-type sounds using the real mp3 files in the folder.
+// Falls back to a generated tone if the file can't be played.
+
+function playSound(src) {
+  try {
+    let audio = new Audio(src);
+    audio.volume = 0.7;
+    audio.play().catch(() => collectSoundFallback());
+  } catch (e) { collectSoundFallback(); }
+}
+
+// Fallback: synthesised "ding" via Web Audio API
+function collectSoundFallback() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(880, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(1760, ctx.currentTime + 0.15);
+    gain.gain.setValueAtTime(0.4, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.3);
+  } catch (e) { /* audio not available */ }
+}
+
+// Map each collectible type to its mp3 file
+const collectSounds = {
+  coins:    "sounds/coin.mp3",
+  keys:     "sounds/key.wav",
+  dogs:     "sounds/dog.wav",
+  cartoons: "sounds/cartoon.wav",
+};
+
+function collectSound(type) {
+  let src = collectSounds[type];
+  if (src) playSound(src);
+  else collectSoundFallback();
+}
+
+function interact(squares, string){
+    for (let i = 0; i < squares.length; i++){
+
+        let dis = Math.sqrt(
+            Math.pow((pawn.x - squares[i][0]), 2) +
+            Math.pow((pawn.y - squares[i][1]), 2) +
+            Math.pow((pawn.z - squares[i][2]), 2)
+        );
+
+        if (dis < squares[i][6]) {
+
+            document.getElementById(`${string} ${i}`).style.display = "none";
+
+            // Play sound
+            if (string === "coin") {
+                collectSound("coins");
+            }
+
+            if (string === "key") {
+                collectSound("keys");
+            }
+             if (string === "dog") {
+                collectSound("dogs");
+            }
+
+            if (string === "cartoon") {
+                collectSound("cartoons");
+            }
+            if (string !== "cartoon") {
+    showNextCartoon();
+}
+
+            squares[i][0] = 100000;
+        }
+    }
+}
+
+function rotateItems(squares, string){
+    itemRotation = itemRotation + 2;
+
+    for (let i = 0; i < squares.length; i++){
+let element = document.getElementById(`${string} ${i}`);
+        if (element) {
+            element.style.transform =
+                "translate3d(" + (600 - squares[i][6]/2 + squares[i][0]) + "px," +
+                                  (400 - squares[i][7]/2 + squares[i][1]) + "px," +
+                                  squares[i][2] + "px)" +
+                "rotateX(" + squares[i][3] + "deg)" +
+                "rotateY(" + itemRotation + "deg)" +
+                "rotateZ(" + squares[i][5] + "deg)";
+        }
+    }
+}
+
+let nextCartoon = 0;
+
+function showNextCartoon() {
+
+    if (nextCartoon >= cartoons.length) return;
+
+    let cartoon = document.getElementById(`cartoon ${nextCartoon}`);
+
+    if (cartoon) {
+        cartoon.style.display = "block";
+        nextCartoon++;
+    }
+}
+createNewWord();
+createSquare(coins, "coin");
+createSquare(keys, "key");
+createSquare(dogs, "dog");
+createSquare(cartoons, "cartoon");
+for (let i = 0; i < cartoons.length; i++) {
+    document.getElementById(`cartoon ${i}`).style.display = "none";
+}
+TimerGame = setInterval(repeat, 10);
+
+function repeat() {
+  update();
+  interact(coins, "coin");
+  interact(keys, "key");
+  interact(keys, "key");
+  interact(dogs, "dog");
+  interact(cartoons, "cartoon");
+  rotateItems(coins, "coin");
+  rotateItems(keys, "key");
+  rotateItems(dogs, "dog");
+  rotateItems(cartoons, "cartoon");
+}
