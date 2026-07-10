@@ -1,50 +1,87 @@
 <!DOCTYPE html>
-
 <HTML>
     <HEAD>
         <TITLE>3D GAME</TITLE>
         <link rel="stylesheet" href="style.css">
+        <link rel="stylesheet" href="theme.css?v=4">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta charset="utf-8">
-
     </HEAD>
 
     <BODY>
         <div id="container">
-        <div id="world">
-           
-        </div>
-        <div id="menu1" class="menu" style="display: block">
-            <div id="button1" class="button">
-                <p>Start game</p>
+            <div id="world"></div>
+            
+            <!-- Main Menu -->
+            <div id="menu1" class="menu" style="display:block;">
+                <h1 class="gameTitle">🏰 THE LOST MAZE</h1>
+                <p class="gameDescription">
+                    Find every key.<br>
+                    Discover every Enchanted Painting.<br>
+                    Escape the maze before time runs out.
+                </p>
+                <div id="button1" class="button">
+                    <p>▶ START GAME</p>
+                </div>
+                <div id="button2" class="button">
+                    <p>📖 INSTRUCTIONS</p>
+                </div>
             </div>
-              <div id="button2" class="button">
-                <p>Instruction</p>
-            </div>
-        </div>
-                <div id="menu2" class="menu">
-                    <p> <strong>Control</strong><br>
-                        <p style="font-size: 30px; top: 200px;"></p>
-                        w- Go forward<br>
-                        s- Go back<br>  
-                        a- Go left<br>
-                        d- Go right<br>
-                        space- Jump<br>
-                        You can use English Keybaord only!!!
-                    </p>
 
-                             <div id="button3" class="button">
-                                <p>Back</p>
+            <!-- Instructions Menu -->
+            <div id="menu2" class="menu">
+                <h1>📖 GAME GUIDE</h1>
 
-            </div>
-              
-            </div>
+                <div class="section">
+                    <h2>🎯 Mission</h2>
+                    <div class="instructionCard">🔑 Collect all the keys.</div>
+                    <div class="instructionCard">🎨 Find every Enchanted Painting.</div>
+                    <div class="instructionCard">💰 Coins and 🐶 Dogs increase your score.</div>
+                    <div class="instructionCard">🚪 Escape before time runs out.</div>
                 </div>
 
-        
-    </div>
-    <script src="script.js">  </script>
+                <div class="section">
+                    <h2>🎮 Controls</h2>
+                    <div class="instructionCard">⬆ Arrow Up — Move Forward</div>
+                    <div class="instructionCard">⬇ Arrow Down — Move Backward</div>
+                    <div class="instructionCard">⬅ Arrow Left — Move Left</div>
+                    <div class="instructionCard">➡ Arrow Right — Move Right</div>
+                    <div class="instructionCard">🖱 Mouse — Look Around</div>
+                    <div class="instructionCard">⚡ P — Sprint</div>
+                    <div class="instructionCard">🔄 R — Reset Position</div>
+                </div>
 
+                <div id="button3" class="button">
+                    <p>⬅ BACK</p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Game Overlays -->
+        <div id="winScreen">
+            <h1>🏆 CONGRATULATIONS! 🏆</h1>
+            <p>You escaped the maze!</p>
+            <h2 id="finalScore"></h2>
+            <h2 id="finalTime"></h2>
+            <button onclick="location.reload()">🔄 Play Again</button>
+        </div>
+
+        <div id="loseScreen">
+            <h1>💀 GAME OVER 💀</h1>
+            <p>Time's up! You lost.</p>
+            <h2 id="loseScore"></h2>
+            <button onclick="restartGame()">🔄 Try Again</button>
+        </div>
+
+        <div id="timer" style="display:none;">03:00</div>
+        <div id="mission">Keys: 0/3<br>Paintings: 0/2</div>
+        <div id="scoreBoard">⭐ Score: 0</div>
+        <div id="objective">Objective: Find all keys and Enchanted Paintings!</div>
+
+        <script src="script.js?v=5"></script>
+        <script src="menu.js?v=3"></script>
+        <script src="features.js?v=8"></script>
+        <!-- <script src="mobile.js?v=2"></script> -->
     </BODY>
 </HTML>
-<script src="script.js"></script>
-<script src="menu.js"></script>

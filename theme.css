@@ -1,0 +1,334 @@
+
+.menu{
+    background:
+        radial-gradient(circle at 20% 15%, rgba(140, 70, 255, 0.35), transparent 40%),
+        radial-gradient(circle at 80% 75%, rgba(40, 130, 255, 0.30), transparent 45%),
+        linear-gradient(160deg, #140b33 0%, #1e1247 45%, #090518 100%);
+    text-align: center;
+    padding-top: 60px;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.menu::before{
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+        radial-gradient(2px 2px at 12% 22%, #fff, transparent),
+        radial-gradient(2px 2px at 30% 68%, #fff, transparent),
+        radial-gradient(1.5px 1.5px at 55% 30%, #fff, transparent),
+        radial-gradient(2px 2px at 72% 78%, #fff, transparent),
+        radial-gradient(1.5px 1.5px at 88% 42%, #fff, transparent),
+        radial-gradient(1.5px 1.5px at 42% 88%, #fff, transparent),
+        radial-gradient(2px 2px at 64% 12%, #fff, transparent);
+    animation: twinkle 2.6s ease-in-out infinite;
+}
+
+@keyframes twinkle{
+    0%, 100% { opacity: 0.95; }
+    50%      { opacity: 0.30; }
+}
+
+/* ---- title: pulsing golden glow ---- */
+.gameTitle{
+    position: relative;
+    font-size: 66px;
+    margin: 0 0 14px 0;
+    animation: titleGlow 2.2s ease-in-out infinite;
+}
+
+@keyframes titleGlow{
+    0%, 100% { text-shadow: 0 0 20px gold,    0 0 45px orange; }
+    50%      { text-shadow: 0 0 35px #fff37a, 0 0 85px orange; }
+}
+
+/* ---- description text: back into normal flow, soft blue ---- */
+#menu1 .gameDescription{
+    position: static;
+    transform: none;
+    font-size: 24px;
+    line-height: 1.6;
+    width: 640px;
+    margin: 0 auto 26px auto;
+    color: #cfd8ff;
+}
+
+.button{
+    position: static;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 440px;
+    height: 82px;
+    margin: 20px auto;
+    border-radius: 16px;
+    cursor: pointer;
+    background: linear-gradient(180deg, #ffd75e, #f0a500);
+    border: 3px solid #8a5a00;
+    box-shadow: 0 7px 0 #8a5a00, 0 0 25px rgba(255, 200, 60, 0.35);
+    transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+    position: relative;
+    z-index: 1;              /* above the ::before starfield */
+}
+
+.button:hover{
+    background: linear-gradient(180deg, #ffe488, #ffb61e);
+    transform: translateY(-4px);
+    box-shadow: 0 11px 0 #8a5a00, 0 0 45px rgba(255, 210, 80, 0.65);
+    filter: brightness(1.05);
+}
+
+.button:active{
+    transform: translateY(3px);
+    box-shadow: 0 3px 0 #8a5a00;
+}
+
+.button p{
+    position: static;
+    transform: none;
+    margin: 0;
+    font-size: 27px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    color: #4a2f00;
+}
+
+/* ---- instructions screen ---- */
+#menu2{
+    padding-top: 45px;
+    overflow: auto;
+}
+
+#menu2 h1{
+    color: gold;
+    font-size: 38px;
+    margin: 16px 0 8px 0;
+    text-shadow: 0 0 18px orange;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+#menu2 p{
+    position: static;
+    transform: none;
+    font-size: 21px;
+    line-height: 1.75;
+    width: 760px;
+    margin: 0 auto;
+    color: #e2e8ff;
+}
+
+#winScreen p, #loseScreen p{
+    position: static;
+    transform: none;
+    font-size: 26px;
+}
+
+
+html, body{
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    background:
+        radial-gradient(circle at 75% 20%, rgba(120, 60, 220, 0.18), transparent 45%),
+        #090518;
+}
+
+.menu{
+    width: 100%;
+    height: 100%;
+    left: 0;
+    top: 0;
+}
+
+
+[id="map 1"], [id="map 2"], [id="map 3"], [id="map 4"], [id="map 5"],
+[id="map 6"], [id="map 7"], [id="map 8"],
+[id="map 9"], [id="map 10"], [id="map 11"],
+[id="map 12"], [id="map 13"], [id="map 14"]{
+    background:
+        repeating-linear-gradient(0deg,
+            transparent 0px, transparent 44px, #0d0a16 44px, #0d0a16 50px),
+        repeating-linear-gradient(90deg,
+            transparent 0px, transparent 86px, #0d0a16 86px, #0d0a16 94px),
+        linear-gradient(#4a4076, #2e2650) !important;
+}
+
+/* outer boundary — royal violet */
+[id="map 1"], [id="map 2"], [id="map 3"], [id="map 4"], [id="map 5"]{
+    border: 4px solid rgba(122, 42, 255, 0.55) !important;
+    box-shadow: inset 0 0 70px rgba(0,0,0,0.75),
+                inset 0 0 35px rgba(122, 42, 255, 0.40) !important;
+}
+
+/* ring 3 — arcane cyan */
+[id="map 6"], [id="map 7"], [id="map 8"]{
+    border: 4px solid rgba(0, 213, 255, 0.50) !important;
+    box-shadow: inset 0 0 70px rgba(0,0,0,0.75),
+                inset 0 0 35px rgba(0, 213, 255, 0.38) !important;
+}
+
+/* ring 2 — fairy magenta */
+[id="map 9"], [id="map 10"], [id="map 11"]{
+    border: 4px solid rgba(255, 79, 216, 0.50) !important;
+    box-shadow: inset 0 0 70px rgba(0,0,0,0.75),
+                inset 0 0 35px rgba(255, 79, 216, 0.38) !important;
+}
+
+/* ring 1 (start room) — treasure amber */
+[id="map 12"], [id="map 13"], [id="map 14"]{
+    border: 4px solid rgba(255, 178, 0, 0.55) !important;
+    box-shadow: inset 0 0 70px rgba(0,0,0,0.75),
+                inset 0 0 35px rgba(255, 178, 0, 0.40) !important;
+}
+
+/* ground — keep the grass texture but shift it into a darker mystic tone */
+[id="map 0"]{
+    filter: brightness(0.95) hue-rotate(45deg) saturate(1.3);
+}
+
+
+@keyframes winPop{
+    from { transform: scale(0.25); opacity: 0; }
+    to   { transform: scale(1);    opacity: 1; }
+}
+@keyframes winShimmer{
+    0%, 100% { text-shadow: 0 0 25px gold, 0 0 60px orange; }
+    50%      { text-shadow: 0 0 45px #fff37a, 0 0 110px orange; }
+}
+
+#winScreen{
+    background:
+        radial-gradient(circle at 50% 30%, rgba(255, 200, 80, 0.28), transparent 55%),
+        radial-gradient(circle, rgba(74, 52, 128, 0.94), rgba(22, 14, 48, 0.96));
+}
+#winScreen h1{
+    font-size: 62px;
+    color: gold;
+    animation: winPop 0.7s ease, winShimmer 2.2s ease-in-out infinite;
+}
+#winScreen p{
+    color: #ffe9a8;
+    animation: winPop 0.9s ease;
+}
+#winScreen h2{
+    color: #e8ecff;
+    font-weight: normal;
+    line-height: 1.5;
+    animation: winPop 1.1s ease;
+}
+#winScreen button{
+    border: none;
+    border-radius: 14px;
+    background: linear-gradient(180deg, #ffd75e, #f0a500);
+    color: #4a2f00;
+    font-weight: bold;
+    box-shadow: 0 6px 0 #8a5a00, 0 0 30px rgba(255, 200, 60, 0.45);
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+#winScreen button:hover{
+    transform: translateY(-3px);
+    box-shadow: 0 9px 0 #8a5a00, 0 0 50px rgba(255, 210, 80, 0.7);
+}
+
+
+@keyframes losePulse{
+    0%, 100% { box-shadow: 0 0 30px rgba(255, 0, 0, 0.45), inset 0 0 40px rgba(120, 0, 0, 0.5); }
+    50%      { box-shadow: 0 0 70px rgba(255, 30, 30, 0.85), inset 0 0 60px rgba(160, 0, 0, 0.7); }
+}
+@keyframes loseShake{
+    0%   { transform: translate(-50%, -50%) rotate(0deg) scale(0.3); opacity: 0; }
+    60%  { transform: translate(-50%, -50%) rotate(-2deg) scale(1.06); opacity: 1; }
+    80%  { transform: translate(-50%, -50%) rotate(1.5deg) scale(0.98); }
+    100% { transform: translate(-50%, -50%) rotate(0deg) scale(1); }
+}
+
+#loseScreen{
+    background:
+        radial-gradient(circle at 50% 20%, rgba(120, 0, 0, 0.45), transparent 55%),
+        rgba(38, 12, 20, 0.95);
+    border: 4px solid #ff2222;
+    animation: loseShake 0.6s ease, losePulse 1.6s ease-in-out infinite;
+}
+#loseScreen h1{
+    text-shadow: 0 0 25px red, 0 0 60px darkred;
+}
+#loseScreen p, #loseScreen h2{
+    color: #ffc9c9;
+}
+#loseScreen button{
+    background: linear-gradient(180deg, #ff5b5b, #c40000);
+    box-shadow: 0 6px 0 #6b0000, 0 0 25px rgba(255, 40, 40, 0.5);
+    font-weight: bold;
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+#loseScreen button:hover{
+    transform: translateY(-3px);
+    box-shadow: 0 9px 0 #6b0000, 0 0 45px rgba(255, 60, 60, 0.8);
+}
+
+
+@keyframes gemBob{
+    0%, 100% { transform: translateY(0px)  rotate(-8deg); }
+    50%      { transform: translateY(-18px) rotate(8deg); }
+}
+
+
+#container{
+    contain: paint;
+}
+
+/* both menus always cover the whole game area, guide scrolls inside itself */
+#menu1, #menu2{
+    width: 100%;
+    height: 100%;
+    left: 0;
+    top: 0;
+    box-sizing: border-box;
+}
+#menu2{
+    overflow-y: auto;
+    padding: 40px 60px 60px 60px;
+    text-align: left;
+}
+
+#menu2 h1{
+    text-align: center;
+    font-size: 46px;
+    color: gold;
+    text-shadow: 0 0 25px orange;
+    margin: 0 0 25px 0;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+#menu2 .section{
+    margin-bottom: 28px;
+}
+
+#menu2 h2{
+    color: gold;
+    font-size: 30px;
+    font-family: Arial, Helvetica, sans-serif;
+    margin: 0 0 12px 0;
+    padding-bottom: 8px;
+    border-bottom: 2px solid rgba(255, 215, 0, 0.35);
+}
+
+.instructionCard{
+    background: rgba(255, 255, 255, 0.07);
+    border-left: 6px solid gold;
+    border-radius: 12px;
+    padding: 16px 22px;
+    margin: 12px 0;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 22px;
+    color: #e8ecff;
+    text-align: center;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35);
+}
+
+/* BACK button centered under the guide */
+#menu2 .button{
+    margin: 30px auto 10px auto;
+}

@@ -5,10 +5,18 @@ var button1 = document.getElementById("button1");
 var button2 = document.getElementById("button2");
 var button3 = document.getElementById("button3");
 
-//create navigation functions
+
 button1.onclick = function(){
+
     menu1.style.display = "none";
-   canlock = true;
+
+    document.getElementById("timer").style.display = "block";
+
+    canlock = true;
+    playBackgroundMusic();
+
+    startTimer();
+
 }
 button2.onclick = function(){
     menu1.style.display = "none";

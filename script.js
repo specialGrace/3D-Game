@@ -1,5 +1,40 @@
 // Word variables
+console.log("SCRIPT LOADED — v3 THIRD-PERSON HERO");
 var deg = Math.PI / 180;
+const exit = {
+    x: 500,
+    z: 1000,
+    radius: 120
+};
+
+let canEscape = false;
+let TimerGame;
+
+let backgroundMusic = new Audio("sounds/background.mp3");
+
+backgroundMusic.loop = true;
+backgroundMusic.volume = 0.2;
+
+
+function playBackgroundMusic(){
+
+    backgroundMusic.play().catch(function(error){
+
+        console.log("Music waiting for user interaction");
+
+    });
+
+}
+
+
+function stopBackgroundMusic(){
+
+    backgroundMusic.pause();
+
+    backgroundMusic.currentTime = 0;
+
+}
+
 function player(x, y, z, rx, ry) {
   this.x = x;
   this.y = y;
@@ -34,10 +69,6 @@ var map = [
   //  coordination    rotation
   [0, 100, 0, 90, 0, 0, 2000, 2000, "#005500"], // ground
 
-  // ---- Labyrinth ----------------------------------------------------------
-  // The player starts at (0,0), the middle of the map. Walls form nested
-  // rings, each with an opening on a different side, so the single path
-  // spirals outward: center -> right -> top -> right -> back exit.
 
   // Outer boundary (back wall has a gap that is the maze exit)
   [0, 0, -1000, 0, 0, 0, 2000, 200, "#00fff2"], // front wall
@@ -61,12 +92,122 @@ var map = [
   [0, 0, 250, 0, 0, 0, 500, 200, "#2bff00"], // bottom
   [-250, 0, 0, 0, 90, 0, 500, 200, "#2bff00"], // left
 ];
+let coinsCollected = 0;
+let keysCollected = 0;
+let dogsCollected = 0;
+let cartoonsCollected = 0;
+
+let startTime = Date.now();
+
+const TOTAL_KEYS = keys.length;
+const TOTAL_CARTOONS = cartoons.length;
 
 let movementSpeed = 1;
 let initialPosition = 0;
-let pawn = new player(0, 0, 0, 0, 0);
+let pawn = new player(0, 0, 0, 8, 0);
 let world = document.getElementById("world");
-// let container = document.getElementById("container");
+
+
+// becomes "the hero collects the item".
+const CAMERA_DISTANCE = 240;   // how far the camera sits behind the hero
+const CAMERA_HEIGHT   = 40;    // just above the hero's shoulders
+
+let heroEl, heroSprite;
+let walkCycle = 0;
+
+function createPlayerCharacter(){
+
+    heroEl = document.createElement("div");
+    heroEl.id = "hero";
+    heroEl.style.position = "absolute";
+    heroEl.style.width  = "80px";
+    heroEl.style.height = "110px";
+    heroEl.style.pointerEvents = "none";
+
+    // soft round shadow under the feet
+    let shadow = document.createElement("div");
+    shadow.style.position = "absolute";
+    shadow.style.bottom = "-6px";
+    shadow.style.left = "50%";
+    shadow.style.transform = "translateX(-50%)";
+    shadow.style.width = "60px";
+    shadow.style.height = "14px";
+    shadow.style.borderRadius = "50%";
+    shadow.style.background = "radial-gradient(rgba(0,0,0,0.55), transparent 70%)";
+
+    // the hero sprite itself (emoji, swaps between idle / running)
+    heroSprite = document.createElement("div");
+    heroSprite.textContent = "🧍‍♀️";
+    heroSprite.style.position = "absolute";
+    heroSprite.style.left = "0";
+    heroSprite.style.right = "0";
+    heroSprite.style.bottom = "0";
+    heroSprite.style.textAlign = "center";
+    heroSprite.style.fontSize = "80px";
+    heroSprite.style.lineHeight = "1";
+    heroSprite.style.filter = "drop-shadow(0 4px 8px rgba(0,0,0,0.6))";
+
+    // little name tag floating over the head
+    let tag = document.createElement("div");
+    tag.textContent = "⭐ YOU";
+    tag.style.position = "absolute";
+    tag.style.top = "-28px";
+    tag.style.left = "50%";
+    tag.style.transform = "translateX(-50%)";
+    tag.style.fontFamily = "Arial, sans-serif";
+    tag.style.fontSize = "16px";
+    tag.style.fontWeight = "bold";
+    tag.style.color = "gold";
+    tag.style.textShadow = "0 0 6px black, 0 0 6px black";
+    tag.style.whiteSpace = "nowrap";
+
+    heroEl.appendChild(shadow);
+    heroEl.appendChild(heroSprite);
+    heroEl.appendChild(tag);
+    world.append(heroEl);
+}
+
+// quick "pop" when the hero grabs an item (works together with the facing flip)
+let heroPopUntil = 0;
+let heroFacing = 1;    // 1 = facing left (emoji's natural side), -1 = facing right
+
+function heroGrabPop(){
+    if (!heroSprite) return;
+    heroSprite.style.transition = "transform 0.12s ease-out";
+    heroPopUntil = Date.now() + 140;
+}
+
+function updatePlayerCharacter(){
+
+    let moving = pressLeft || pressRight || pressForward || pressBack;
+    let sprinting = moving && pressPower;
+
+    // face wherever the left/right arrows point
+    if (pressRight) heroFacing = -1;
+    if (pressLeft)  heroFacing = 1;
+
+    if (moving){
+        walkCycle += sprinting ? 0.5 : 0.25;
+        heroSprite.textContent = "🏃‍♀️";
+    } else {
+        heroSprite.textContent = "🧍‍♀️";
+    }
+
+    // combine the facing flip with the grab-pop scale
+    let pop = Date.now() < heroPopUntil ? 1.35 : 1;
+    heroSprite.style.transform =
+        "scaleX(" + (heroFacing * pop) + ") scaleY(" + pop + ")";
+
+    // small hop while running so the hero feels alive
+    let hop = moving ? Math.abs(Math.sin(walkCycle)) * 10 : 0;
+
+  
+    heroEl.style.transform =
+        "translate3d(" + (600 - 40 + pawn.x) + "px," +
+                         (400 - 55 + 45 - hop) + "px," +
+                         pawn.z + "px)" +
+        "rotateY(" + pawn.ry + "deg)";
+}
 
 // variables for movement
 var pressLeft = 0;
@@ -136,7 +277,9 @@ document.addEventListener("keyup", (event)=>{
 
 //if the mouse is pressed
 container.onclick = function () {
-  if(canlock) container.requestPointerLock();
+  if(canlock) {
+    container.requestPointerLock();
+  }
 };
 
 
@@ -150,8 +293,6 @@ document.addEventListener("mousemove", (event)=>{
     mouseY = event.movementY;
 })
 
-// var pawn = new player(0,0,0,0,0);
-// var world = document.getElementById("world");
 
 function isColliding(x, z) {
     let playerSize = 40;
@@ -242,14 +383,18 @@ pawn.y = nextY;
         pawn.x = 0;
         pawn.y = 0;
         pawn.z = 0;
-        pawn.rx = 0;
+        pawn.rx = 8;    // gentle third-person tilt
         pawn.ry = 0;
     }
 
-   //change coordinates of the world
-	world.style.transform ="translateZ(600px)" + "rotateX(" + (-pawn.rx) + "deg)" + 
+   // keep the visible hero glued to the pawn position
+    updatePlayerCharacter();
+
+ 
+	world.style.transform ="translateZ(" + (600 - CAMERA_DISTANCE) + "px)" +
+                            "rotateX(" + (-pawn.rx) + "deg)" + 
                             "rotateY(" + (-pawn.ry) + "deg)" +  
-                            "translate3d(" + (-pawn.x) + "px," + (-pawn.y) + "px," + (-pawn.z) + "px)";
+                            "translate3d(" + (-pawn.x) + "px," + (-pawn.y + CAMERA_HEIGHT) + "px," + (-pawn.z) + "px)";
 }
 function createNewWord() {
   createSquare(map, "map");
@@ -257,8 +402,7 @@ function createNewWord() {
 
 
 
-// ---- Wall decoration assets ------------------------------------------------
-// ratio = width / height of the frame; insetX/insetY = inset for center picture window.
+
 const wallFrames = [
   { ratio: 1, insetX: 0.16, insetY: 0.16 },
   { ratio: 1.5, insetX: 0.08, insetY: 0.15 },
@@ -330,7 +474,7 @@ function createSquare(squares, string) {
         newElement.appendChild(decor);
         
         wallIndex++;
-    
+      
       }
     } else {
       // Generic collectible — index [9] is either an emoji or an image filename
@@ -362,10 +506,6 @@ function createSquare(squares, string) {
     world.append(newElement);
   }
 }
-
-// ---- Sounds ----------------------------------------------------------------
-// Per-type sounds using the real mp3 files in the folder.
-// Falls back to a generated tone if the file can't be played.
 
 function playSound(src) {
   try {
@@ -400,11 +540,18 @@ const collectSounds = {
   dogs:     "sounds/dog.wav",
   cartoons: "sounds/cartoon.wav",
 };
+const winSound = new Audio(
+"sounds/win.mp3"
+);
 
 function collectSound(type) {
   let src = collectSounds[type];
-  if (src) playSound(src);
-  else collectSoundFallback();
+  if (src) {
+    playSound(src);
+  }
+  else {
+    collectSoundFallback();
+  }
 }
 
 function interact(squares, string){
@@ -420,21 +567,32 @@ function interact(squares, string){
 
             document.getElementById(`${string} ${i}`).style.display = "none";
 
+            heroGrabPop();
+
             // Play sound
             if (string === "coin") {
+                coinsCollected++;
                 collectSound("coins");
             }
 
             if (string === "key") {
+                keysCollected++;
                 collectSound("keys");
             }
              if (string === "dog") {
+                dogsCollected++;
                 collectSound("dogs");
             }
 
             if (string === "cartoon") {
+                cartoonsCollected++;
                 collectSound("cartoons");
+                 
             }
+             updateMission();
+             updateScore();
+             updateObjective();
+                checkWin();
             if (string !== "cartoon") {
     showNextCartoon();
 }
@@ -442,6 +600,244 @@ function interact(squares, string){
             squares[i][0] = 100000;
         }
     }
+}
+function checkWin(){
+
+    if(
+        keysCollected === TOTAL_KEYS &&
+        cartoonsCollected === TOTAL_CARTOONS
+    ){
+
+        canEscape = true;
+
+        // no browser alert
+        document.getElementById("mission").innerHTML =
+        "🚪 All items found! Find the exit!";
+
+    }
+
+}
+function checkExit(){
+
+    if(!canEscape) return;
+
+    let distance = Math.sqrt(
+
+        Math.pow(pawn.x - exit.x,2) +
+        Math.pow(pawn.z - exit.z,2)
+
+    );
+
+    if(distance < exit.radius){
+
+        gameWon();
+
+    }
+
+}
+function updateMission(){
+
+    document.getElementById("mission").innerHTML =
+
+    "🔑 Keys: " +
+    keysCollected + "/" + TOTAL_KEYS +
+
+    "<br>🎨 Paintings: " +
+    cartoonsCollected + "/" + TOTAL_CARTOONS;
+
+}
+
+function updateObjective(){
+
+    let objective =
+    document.getElementById("objective");
+
+
+    if(keysCollected < TOTAL_KEYS){
+
+        objective.innerHTML =
+        "🎯 Objective:<br>Collect all the keys!";
+
+    }
+
+    else if(cartoonsCollected < TOTAL_CARTOONS){
+
+        objective.innerHTML =
+        "🎯 Objective:<br>Find the missing Enchanted Paintings!";
+
+    }
+
+    else{
+
+        objective.innerHTML =
+        "🚪 Objective:<br>Escape through the maze exit!";
+
+    }
+
+}
+function gameWon(){
+
+    clearInterval(TimerGame);
+    stopBackgroundMusic();
+
+if(document.pointerLockElement){
+    document.exitPointerLock();
+}
+    let seconds =
+        Math.floor((Date.now()-startTime)/1000);
+
+    let score =
+        coinsCollected +
+        keysCollected +
+        dogsCollected +
+        cartoonsCollected;
+
+    document.getElementById("finalScore").innerHTML =
+
+"⭐ Final Score : " + score +
+
+"<br><br>"
+
++
+
+"🪙 Coins : " + coinsCollected +
+
+"<br>"
+
++
+
+"🔑 Keys : " + keysCollected +
+
+"<br>"
+
++
+
+"🐶 Dogs : " + dogsCollected +
+
+"<br>"
+
++
+
+"🎨 Cartoons : " + cartoonsCollected;
+
+    document.getElementById("finalTime").innerHTML =
+        "Time: " + seconds + " seconds";
+
+    document.getElementById("winScreen").style.display =
+        "flex";
+document.getElementById("timer").style.display = "none";
+backgroundMusic.pause();
+winSound.play();
+    createConfetti();
+
+}
+
+function createConfetti(){
+
+    for(let i=0;i<250;i++){
+
+        let confetti=document.createElement("div");
+
+        confetti.style.position="fixed";
+
+        confetti.style.left=Math.random()*100+"vw";
+
+        confetti.style.top="-20px";
+
+        confetti.style.width="8px";
+
+        confetti.style.height="8px";
+
+        confetti.style.background=
+        `hsl(${Math.random()*360},100%,50%)`;
+
+        confetti.style.pointerEvents="none";
+
+        confetti.style.zIndex="99999";
+
+        confetti.style.transition=
+        "transform 4s linear";
+
+        document.body.appendChild(confetti);
+
+        setTimeout(()=>{
+
+            confetti.style.transform=
+            `translateY(120vh)
+             rotate(${Math.random()*720}deg)`;
+
+        },10);
+
+    }
+
+}
+let timeRemaining = 180;
+let TimerClock;
+
+function startTimer(){
+
+    TimerClock = setInterval(function(){
+
+        timeRemaining--;
+
+        let minutes = Math.floor(timeRemaining / 60);
+
+        let seconds = timeRemaining % 60;
+
+
+        document.getElementById("timer").innerHTML =
+        minutes + ":" +
+        String(seconds).padStart(2,"0");
+
+
+        if(timeRemaining <= 0){
+
+            clearInterval(TimerClock);
+
+            gameLost();
+
+        }
+
+
+    },1000);
+
+}
+function gameLost(){
+
+    clearInterval(TimerGame);
+
+stopBackgroundMusic();
+    if(document.pointerLockElement){
+
+        if(document.pointerLockElement){
+    document.exitPointerLock();
+}
+
+    }
+
+
+    let score =
+    coinsCollected +
+    keysCollected +
+    dogsCollected +
+    cartoonsCollected;
+
+
+    document.getElementById("loseScore").innerHTML =
+
+    "Final Score: " + score;
+
+
+    document.getElementById("loseScreen").style.display="block";
+
+
+}
+function restartGame(){
+
+    timeRemaining = 180;
+
+    location.reload();
+
 }
 
 function rotateItems(squares, string){
@@ -463,6 +859,19 @@ let element = document.getElementById(`${string} ${i}`);
 
 let nextCartoon = 0;
 
+function updateScore(){
+
+    let score =
+        coinsCollected +
+        keysCollected +
+        dogsCollected +
+        cartoonsCollected;
+
+    document.getElementById("scoreBoard").innerHTML =
+
+        "⭐ Score : " + score;
+
+}
 function showNextCartoon() {
 
     if (nextCartoon >= cartoons.length) return;
@@ -475,10 +884,15 @@ function showNextCartoon() {
     }
 }
 createNewWord();
+createPlayerCharacter();
 createSquare(coins, "coin");
 createSquare(keys, "key");
 createSquare(dogs, "dog");
 createSquare(cartoons, "cartoon");
+// createNPC();
+updateMission();
+updateObjective();
+updateScore();
 for (let i = 0; i < cartoons.length; i++) {
     document.getElementById(`cartoon ${i}`).style.display = "none";
 }
@@ -486,8 +900,8 @@ TimerGame = setInterval(repeat, 10);
 
 function repeat() {
   update();
+  
   interact(coins, "coin");
-  interact(keys, "key");
   interact(keys, "key");
   interact(dogs, "dog");
   interact(cartoons, "cartoon");
@@ -495,4 +909,5 @@ function repeat() {
   rotateItems(keys, "key");
   rotateItems(dogs, "dog");
   rotateItems(cartoons, "cartoon");
+  checkExit();
 }
